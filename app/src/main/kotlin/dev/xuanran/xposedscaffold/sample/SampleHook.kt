@@ -21,12 +21,14 @@ import dev.xuanran.xposed.runtime.SwitchHook
     restartPolicy = RestartPolicy.HOST,
 )
 object SampleHook : SwitchHook() {
+    // 标准配置项会由设置页自动渲染；简单功能无需编写任何 Compose 页面。
     override val options = listOf(
         BooleanOption("include_class_name", "Include class name", default = true),
         StringOption("log_tag", "Log tag", "Used for Logcat output.", "XposedScaffold"),
     )
 
     override fun install(context: HookContext) {
+        // 这是不会依赖目标私有类的安全示例。真实功能通常通过 DexKit 取得混淆方法。
         val method = Activity::class.java.getDeclaredMethod("onResume")
         context.hook(method) {
             after {

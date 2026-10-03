@@ -23,6 +23,7 @@ import com.squareup.kotlinpoet.ksp.writeTo
 
 private const val HOOK_ITEM = "dev.xuanran.xposed.api.HookItem"
 
+/** KSP 服务入口，由 META-INF/services 自动发现。 */
 class HookRegistryProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
         HookRegistryProcessor(environment.codeGenerator, environment.logger)
@@ -35,6 +36,7 @@ private class HookRegistryProcessor(
     private var generated = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        // KSP 可能多轮调用 process，聚合注册表只能生成一次。
         if (generated) return emptyList()
         val symbols = resolver.getSymbolsWithAnnotation(HOOK_ITEM).toList()
         val deferred = symbols.filterNot { it.validate() }
@@ -43,6 +45,7 @@ private class HookRegistryProcessor(
         val classes = symbols.filterIsInstance<KSClassDeclaration>()
         val ids = mutableSetOf<String>()
         classes.forEach { declaration ->
+            // object 能保证进程内单例，也避免生成代码猜测构造函数参数。
             if (declaration.classKind != ClassKind.OBJECT) {
                 logger.error("@HookItem must annotate a Kotlin object", declaration)
             }
@@ -52,6 +55,7 @@ private class HookRegistryProcessor(
         }
 
         val hookFeature = ClassName("dev.xuanran.xposed.api", "HookFeature")
+        // 生成直接类型引用而不是字符串反射，重命名和混淆时更安全。
         val entries = CodeBlock.builder().add("return listOf(\n").indent().apply {
             classes.forEach { add("%T,\n", it.toClassName()) }
         }.unindent().add(")\n").build()

@@ -2,6 +2,7 @@ package dev.xuanran.xposed.api
 
 import java.lang.reflect.Executable
 
+/** 暂存 DSL 中声明的 before/after 回调。 */
 class HookBuilder {
     internal var before: (HookParam.() -> Unit)? = null
     internal var after: (HookParam.() -> Unit)? = null
@@ -10,6 +11,11 @@ class HookBuilder {
     fun after(block: HookParam.() -> Unit) { after = block }
 }
 
+/**
+ * 安装一个与框架无关的 Hook。
+ *
+ * 示例：`context.hook(method) { before { args[0] = "new value" } }`。
+ */
 fun HookContext.hook(
     executable: Executable,
     priority: Int = 50,

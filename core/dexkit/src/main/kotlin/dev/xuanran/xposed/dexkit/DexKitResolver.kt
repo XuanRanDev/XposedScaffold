@@ -7,6 +7,12 @@ import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
+/**
+ * DexKit 查询、缓存和反射恢复的统一入口。
+ *
+ * 缓存键同时包含功能 ID、目标 key、宿主版本和规则 revision。这样宿主升级或匹配规则变化时，
+ * 旧描述符不会被误用。内存中的 [resolved] 只保存本进程已经校验成功的成员。
+ */
 class DexKitResolver(
     private val apkPath: String,
     private val hostVersion: Long,
@@ -17,9 +23,11 @@ class DexKitResolver(
 
     override fun resolve(feature: HookFeature): Boolean {
         val dexFeature = feature as? DexKitFeature ?: return true
+        // 快路径：先尝试从持久化描述符恢复，正常启动无需重新扫描整个 APK。
         val unresolved = dexFeature.dexKitTargets.filterNot { loadCached(feature.metadata.id, it) }
         if (unresolved.isEmpty()) return true
         return runCatching {
+            // 只有确实存在失效目标时才创建 DexKitBridge；use 确保 native 资源及时释放。
             DexKitBridge.create(apkPath).use { bridge ->
                 unresolved.forEach { target ->
                     val descriptor = target.find(bridge)
@@ -47,6 +55,7 @@ class DexKitResolver(
         ?: error("DexKit field target is not resolved: $key")
 
     override fun invalidate(featureId: String) {
+        // 只清除指定功能，避免一个功能适配失败导致全部功能重新扫描。
         cache.edit().apply {
             cache.all.keys.filter { it.startsWith("dex.$featureId.") }.forEach(::remove)
         }.apply()

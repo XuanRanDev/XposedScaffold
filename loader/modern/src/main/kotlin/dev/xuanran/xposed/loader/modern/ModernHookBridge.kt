@@ -9,6 +9,7 @@ import dev.xuanran.xposed.api.HookParam
 import dev.xuanran.xposed.api.UnhookHandle
 import java.lang.reflect.Executable
 
+/** 把 libxposed 的拦截器链模型适配成统一的 before/after 语义。 */
 class ModernHookBridge(private val module: XposedModule) : HookBridge {
     override val frameworkName get() = module.frameworkName
     override val frameworkVersion get() = module.frameworkVersion
@@ -21,6 +22,7 @@ class ModernHookBridge(private val module: XposedModule) : HookBridge {
             .intercept { chain ->
                 val param = ModernParam(chain)
                 callback.before(param)
+                // before 未提前给出结果/异常时才继续执行链，修改后的 args 会传给后续 Hook。
                 if (!param.hasResult) {
                     try {
                         param.result = chain.proceed(param.args)
@@ -29,6 +31,7 @@ class ModernHookBridge(private val module: XposedModule) : HookBridge {
                     }
                 }
                 callback.after(param)
+                // after 最终决定向原调用者返回结果还是抛出异常。
                 param.throwable?.let { throw it }
                 param.result
             }
@@ -43,6 +46,9 @@ class ModernHookBridge(private val module: XposedModule) : HookBridge {
     override fun remotePreferences(name: String): SharedPreferences = module.getRemotePreferences(name)
 }
 
+/**
+ * Chain 的可变代理。API 102 的参数是只读 List，因此复制为数组供传统风格 DSL 修改。
+ */
 private class ModernParam(private val chain: XposedInterface.Chain) : HookParam {
     override val executable get() = chain.executable
     override val thisObject get() = chain.thisObject

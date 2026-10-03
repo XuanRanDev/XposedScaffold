@@ -76,11 +76,13 @@ import dev.xuanran.xposed.runtime.enabledKey
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // 模块应用进程不会经过 Xposed Startup，因此在这里显式注册同一份 KSP 功能列表供 UI 使用。
         if (HookRegistry.all().isEmpty()) HookRegistry.register(createHooks())
         setContent { ScaffoldTheme { ModuleHome(this) } }
     }
 }
 
+// 集中维护颜色，后续可以无侵入替换为动态取色或品牌主题。
 private val Accent = Color(0xFF9B8CFF)
 private val AccentBlue = Color(0xFF64B5F6)
 private val Background = Color(0xFF090D16)
@@ -106,6 +108,7 @@ private fun ScaffoldTheme(content: @Composable () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModuleHome(context: Context) {
+    // 名称必须与 ModuleStartup/remotePreferences 使用的名称一致。
     val preferences = remember { context.getSharedPreferences("xposed_scaffold", Context.MODE_PRIVATE) }
     var query by remember { mutableStateOf("") }
     val records = remember { HookRegistry.all() }
@@ -114,6 +117,7 @@ private fun ModuleHome(context: Context) {
         query.isBlank() || listOf(metadata.title, metadata.description, metadata.path.joinToString("/"))
             .plus(metadata.keywords).any { it.contains(query, ignoreCase = true) }
     }
+    // 第一段 path 作为首页分组；更深层级可在未来扩展为二级页面。
     val grouped = visible.groupBy { it.feature.metadata.path.firstOrNull() ?: "General" }
 
     Scaffold(containerColor = Background) { padding ->
@@ -201,6 +205,7 @@ private fun HookCard(context: Context, record: HookRecord, preferences: android.
     val feature = record.feature
     val metadata = feature.metadata
     var enabled by remember(metadata.id) {
+        // API 功能永远启用，普通 SwitchHook 从稳定 ID 对应的配置键恢复。
         mutableStateOf(metadata.uiType == HookUiType.API || preferences.getBoolean(enabledKey(metadata.id), false))
     }
     var showDetails by remember { mutableStateOf(false) }
@@ -240,6 +245,7 @@ private fun HookCard(context: Context, record: HookRecord, preferences: android.
                     onCheckedChange = {
                         enabled = it
                         preferences.edit().putBoolean(enabledKey(metadata.id), it).apply()
+                        // 默认采用“重启宿主后生效”，避免在设置应用里直接跨进程装卸 Hook。
                     },
                 )
                 HookUiType.ACTION -> IconButtonArrow { (feature as? ActionHook)?.run(context) }
@@ -300,6 +306,7 @@ private fun HookOptionEditor(
     option: HookOption,
     preferences: android.content.SharedPreferences,
 ) {
+    // 与 core:runtime 中 optionKey 的格式保持一致，宿主和模块才能读取同一项配置。
     val key = "hook.$hookId.option.${option.key}"
     when (option) {
         is BooleanOption -> {

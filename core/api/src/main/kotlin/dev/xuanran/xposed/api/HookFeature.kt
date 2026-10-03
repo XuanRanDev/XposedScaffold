@@ -1,15 +1,27 @@
 package dev.xuanran.xposed.api
 
+/**
+ * 所有功能的公共契约。
+ *
+ * 实现通常继承 runtime 模块中的 SwitchHook、ActionHook 或 ApiHook，而不是直接实现此接口。
+ */
 interface HookFeature {
+    /** 来自 [HookItem] 的展示与运行约束。 */
     val metadata: HookMetadata
+    /** 轻量目标声明；实际 DexKit 查询由 core:dexkit 的 DexKitFeature 提供。 */
     val dexTargets: List<DexTargetSpec> get() = emptyList()
+    /** 由设置页自动渲染的标准配置项。 */
     val options: List<HookOption> get() = emptyList()
 
+    /** 在安装 Hook 前执行的额外环境判断。 */
     fun isAvailable(environment: HostEnvironment): Availability = Availability.Available
+    /** 安装功能所需的全部 Hook；异常会被 Runtime 隔离并记录。 */
     fun install(context: HookContext)
+    /** 可选卸载逻辑；并非所有 ART Hook 框架都保证即时卸载。 */
     fun unload() = Unit
 }
 
+/** 不依赖 Compose 的声明式配置项，UI 可据此自动生成控件。 */
 sealed interface HookOption {
     val key: String
     val title: String
@@ -38,16 +50,22 @@ data class IntRangeOption(
     val range: IntRange,
 ) : HookOption
 
+/** 功能针对当前宿主环境的可用性结果。 */
 sealed interface Availability {
     data object Available : Availability
     data class Unavailable(val reason: String) : Availability
 }
 
+/** 用于日志和状态页展示的轻量 Dex 目标信息。 */
 data class DexTargetSpec(
     val key: String,
     val revision: Int = 1,
 )
 
+/**
+ * 功能初始化期间的依赖容器。
+ * 将环境、Hook、DexKit、配置和错误通道集中传入，避免使用难以测试的全局变量。
+ */
 class HookContext(
     val environment: HostEnvironment,
     val dex: DexResolver,
@@ -57,6 +75,7 @@ class HookContext(
     val bridge: HookBridge get() = environment.hookBridge
 }
 
+/** Runtime 面向 DexKit 层的稳定接口。 */
 interface DexResolver {
     fun resolve(feature: HookFeature): Boolean
     fun method(key: String): java.lang.reflect.Method
@@ -64,6 +83,7 @@ interface DexResolver {
     fun invalidate(featureId: String)
 }
 
+/** 模块设置与宿主进程共享的类型安全最小配置接口。 */
 interface HookConfig {
     fun getBoolean(key: String, default: Boolean): Boolean
     fun putBoolean(key: String, value: Boolean)

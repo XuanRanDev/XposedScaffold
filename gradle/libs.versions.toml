@@ -1,4 +1,5 @@
 [versions]
+# 所有第三方版本集中在这里，业务模块禁止散落硬编码版本号。
 agp = "8.13.2"
 kotlin = "2.3.0"
 ksp = "2.3.4"
@@ -8,6 +9,7 @@ activity-compose = "1.12.2"
 lifecycle = "2.10.0"
 coroutines = "1.10.2"
 dexkit = "2.0.7"
+# 编译使用 API 102，但 Loader 只依赖 101 基础表面以扩大运行时兼容范围。
 libxposed = "102.0.0"
 kotlinpoet = "2.2.0"
 

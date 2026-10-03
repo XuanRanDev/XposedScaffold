@@ -10,12 +10,14 @@ import dev.xuanran.xposed.api.HookParam
 import dev.xuanran.xposed.api.UnhookHandle
 import java.lang.reflect.Executable
 
+/** 把经典 XposedBridge/XC_MethodHook 适配为业务层统一 HookBridge。 */
 object LegacyHookBridge : HookBridge {
     override val frameworkName = "Legacy Xposed"
     override val frameworkVersion get() = XposedBridge.getXposedVersion().toString()
     override val apiVersion get() = XposedBridge.getXposedVersion()
 
     override fun hook(executable: Executable, priority: Int, callback: HookCallback): UnhookHandle {
+        // before/after 使用同一业务接口，但每次回调包装当前 MethodHookParam，避免跨调用保存状态。
         val unhook = XposedBridge.hookMethod(executable, object : XC_MethodHook(priority) {
             override fun beforeHookedMethod(param: MethodHookParam) = callback.before(LegacyParam(executable, param))
             override fun afterHookedMethod(param: MethodHookParam) = callback.after(LegacyParam(executable, param))
@@ -29,9 +31,11 @@ object LegacyHookBridge : HookBridge {
     }
 
     override fun remotePreferences(name: String): SharedPreferences =
+        // XSharedPreferences 自带只读刷新语义，模块 UI 写入后宿主重启即可读取新值。
         XSharedPreferences("dev.xuanran.xposedscaffold", name).apply { reload() }
 }
 
+/** XC_MethodHook.MethodHookParam 的零拷贝视图。 */
 private class LegacyParam(
     override val executable: Executable,
     private val delegate: XC_MethodHook.MethodHookParam,

@@ -34,12 +34,15 @@ android {
 kotlin { jvmToolchain(17) }
 
 dependencies {
+    // 稳定业务接口与运行时，不依赖具体 Xposed 框架实现。
     implementation(projects.core.api)
     implementation(projects.core.runtime)
     implementation(projects.core.dexkit)
+    // 两套 loader 同时打包进一个 APK，由各自入口资源决定框架采用哪条路径。
     implementation(projects.loader.startup)
     implementation(projects.loader.legacy)
     implementation(projects.loader.modern)
+    // 编译期生成 Hook 注册表，杜绝运行时扫描整个 DEX。
     ksp(projects.processor)
 
     implementation(libs.androidx.core.ktx)
