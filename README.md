@@ -2,8 +2,6 @@
 
 A modern, reusable Xposed module foundation under the `dev.xuanran` namespace.
 
-The project borrows the proven separation used by mature modules such as QAuxiliary—framework loaders, startup, hook API, runtime and feature code are separate—but intentionally leaves out native hooks, hidden DEX, SO protection, Frida and hot updates.
-
 ## What is included
 
 - Legacy Xposed API 82 entry.
