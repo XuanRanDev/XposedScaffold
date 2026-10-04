@@ -4,8 +4,9 @@ A modern, reusable Xposed module foundation under the `dev.xuanran` namespace.
 
 ## What is included
 
-- Legacy Xposed API 82 entry.
-- Modern libxposed API 101–102 entry (`io.github.libxposed:api:102.0.0`).
+- A `legacy` flavor containing only the Xposed API 82 entry.
+- A `modern` flavor containing only the libxposed API 101–102 entry
+  (`io.github.libxposed:api:102.0.0`).
 - A framework-neutral `HookBridge` and small hook DSL.
 - `@HookItem` plus KSP-generated, type-safe feature registry.
 - Automatic Material 3 UI for switch, action and always-on API features.
@@ -98,10 +99,21 @@ Modern libxposed uses framework-provided remote preferences. The legacy adapter 
 
 ## Build
 
-Open the root directory in Android Studio with JDK 17 and Android SDK 36 installed, then run:
+Open the root directory in Android Studio with JDK 17 and Android SDK 36 installed.
+Choose the flavor that matches the installed framework:
 
 ```shell
-./gradlew :app:assembleDebug
+# Compatible with traditional LSPosed/Xposed API 82 loaders.
+./gradlew :app:assembleLegacyDebug
+
+# Requires a framework that genuinely implements libxposed API 101 or 102.
+./gradlew :app:assembleModernDebug
 ```
+
+Both variants deliberately use the same application ID, so they replace each
+other rather than appearing as two independent modules. Never publish a custom
+variant that packages both loader modules: an API 100-era framework may see the
+modern entry metadata but still reflect the obsolete two-argument constructor,
+which fails before module initialization.
 
 The repository is intentionally unsigned beyond the normal Android debug signing configuration.

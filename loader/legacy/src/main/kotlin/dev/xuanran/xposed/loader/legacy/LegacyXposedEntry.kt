@@ -14,7 +14,7 @@ class LegacyXposedEntry : IXposedHookLoadPackage {
 
 object TargetScope {
     // 传统 API 没有 scope.list 回调过滤，必须在入口主动筛选。
-    // 请与 app/src/main/resources/META-INF/xposed/scope.list 保持一致。
+    // 请与 loader/modern/src/main/resources/META-INF/xposed/scope.list 保持一致。
     private val packages = setOf("com.example.target")
     fun contains(packageName: String) = packageName in packages
 }

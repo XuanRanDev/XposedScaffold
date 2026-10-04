@@ -175,7 +175,7 @@ private fun ModuleStatus(featureCount: Int) {
     ) {
         ListItem(
             headlineContent = { Text("脚手架已就绪", fontWeight = FontWeight.SemiBold) },
-            supportingContent = { Text("$featureCount 个功能 · DexKit · 双 Xposed API") },
+            supportingContent = { Text("$featureCount 个功能 · DexKit · ${BuildConfig.XPOSED_API_LABEL}") },
             leadingContent = { Icon(Icons.Outlined.CheckCircle, null, Modifier.size(28.dp)) },
             trailingContent = {
                 Surface(

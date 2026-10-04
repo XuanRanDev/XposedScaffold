@@ -17,6 +17,23 @@ android {
         versionName = "0.1.0"
     }
 
+    // One APK must expose exactly one Xposed entry ABI. Mixing API 82 assets with
+    // libxposed 101/102 metadata lets incompatible framework versions select the
+    // wrong entry class before our code has any chance to perform a version check.
+    flavorDimensions += "xposedApi"
+    productFlavors {
+        create("legacy") {
+            dimension = "xposedApi"
+            versionNameSuffix = "-legacy"
+            buildConfigField("String", "XPOSED_API_LABEL", "\"Legacy API 82\"")
+        }
+        create("modern") {
+            dimension = "xposedApi"
+            versionNameSuffix = "-modern"
+            buildConfigField("String", "XPOSED_API_LABEL", "\"libxposed API 101–102\"")
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -38,10 +55,10 @@ dependencies {
     implementation(projects.core.api)
     implementation(projects.core.runtime)
     implementation(projects.core.dexkit)
-    // 两套 loader 同时打包进一个 APK，由各自入口资源决定框架采用哪条路径。
+    // Shared startup is framework-neutral; each flavor packages only its matching loader.
     implementation(projects.loader.startup)
-    implementation(projects.loader.legacy)
-    implementation(projects.loader.modern)
+    add("legacyImplementation", projects.loader.legacy)
+    add("modernImplementation", projects.loader.modern)
     // 编译期生成 Hook 注册表，杜绝运行时扫描整个 DEX。
     ksp(projects.processor)
 
