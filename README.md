@@ -98,7 +98,19 @@ Keep expensive searches out of ordinary startup where possible. A production pro
 
 ## Configuration note
 
-Modern libxposed uses framework-provided remote preferences. The legacy flavor declares `xposedsharedprefs` and reads the same setting through `XSharedPreferences`; after changing a switch, restart the target application so its process reloads the value.
+Modern API 102 uses framework-provided Remote Preferences. The module settings app obtains
+`XposedService` and writes to LSPosed's preference database; the hooked process reads the same
+group through `XposedModule.getRemotePreferences()`.
+Open the module settings page only after enabling the module in a compatible LSPosed build. The
+status card must show `Remote Preferences 已连接`; restart the target application after changing a
+switch so the hook runtime is initialized from the new value.
+
+The legacy flavor keeps the API 82 entrypoint and uses LSPosed's New XSharedPreferences extension.
+It declares `xposedsharedprefs`, opens the module-side file with `MODE_WORLD_READABLE`, and reads it
+from the hooked process with `XSharedPreferences(modulePackage, preferenceName)`. This requires an
+LSPosed version that implements New XSharedPreferences; plain/older API 82 frameworks are not
+supported for remote switches. On an unsupported framework the settings page disables switches;
+use `ApiHook` or provide your own in-host configuration implementation instead.
 
 ## Design rules
 

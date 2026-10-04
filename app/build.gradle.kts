@@ -14,7 +14,7 @@ require(xposedTargetPackage.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Z
 
 android {
     namespace = "dev.xuanran.xposedscaffold"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = xposedModulePackage
@@ -71,6 +71,7 @@ dependencies {
     implementation(projects.loader.startup)
     add("legacyImplementation", projects.loader.legacy)
     add("modernImplementation", projects.loader.modern)
+    add("modernImplementation", libs.libxposed.service)
     // 编译期生成 Hook 注册表，杜绝运行时扫描整个 DEX。
     ksp(projects.processor)
 

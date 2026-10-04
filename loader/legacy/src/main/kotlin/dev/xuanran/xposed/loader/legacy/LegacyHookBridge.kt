@@ -31,17 +31,9 @@ object LegacyHookBridge : HookBridge {
         throwable?.let(XposedBridge::log)
     }
 
-    override fun remotePreferences(name: String): SharedPreferences =
-        // XSharedPreferences 自带只读刷新语义，模块 UI 写入后宿主重启即可读取新值。
-        XSharedPreferences(ModuleConfig.PACKAGE, name).apply {
-            reload()
-            if (!file.canRead()) {
-                XposedBridge.log(
-                    "[${ModuleConfig.LOG_TAG}] Module preferences are not readable: $file; " +
-                        "SwitchHook values will fall back to defaults",
-                )
-            }
-        }
+    override fun remotePreferences(name: String): SharedPreferences? =
+        XSharedPreferences(ModuleConfig.PACKAGE, name).apply { reload() }
+            .takeIf { it.file.canRead() }
 }
 
 /** XC_MethodHook.MethodHookParam 的零拷贝视图。 */

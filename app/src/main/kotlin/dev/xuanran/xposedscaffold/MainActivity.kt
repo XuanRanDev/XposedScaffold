@@ -82,7 +82,8 @@ private fun ScaffoldTheme(content: @Composable () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModuleHome(context: Context) {
-    val preferences = remember { context.getSharedPreferences(ModuleConfig.PREFERENCES_NAME, Context.MODE_PRIVATE) }
+    val preferences = ModulePreferences.preferences
+    val preferenceStatus = ModulePreferences.status
     val records = remember { HookRegistry.all() }
     var query by remember { mutableStateOf("") }
     var selectedRecord by remember { mutableStateOf<HookRecord?>(null) }
@@ -128,7 +129,7 @@ private fun ModuleHome(context: Context) {
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item { ModuleStatus(records.size) }
+            item { ModuleStatus(records.size, preferenceStatus, preferences != null) }
             item {
                 OutlinedTextField(
                     value = query,
@@ -166,7 +167,7 @@ private fun ModuleHome(context: Context) {
 }
 
 @Composable
-private fun ModuleStatus(featureCount: Int) {
+private fun ModuleStatus(featureCount: Int, preferenceStatus: String, remoteReady: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -175,8 +176,16 @@ private fun ModuleStatus(featureCount: Int) {
     ) {
         ListItem(
             headlineContent = { Text("脚手架已就绪", fontWeight = FontWeight.SemiBold) },
-            supportingContent = { Text("$featureCount 个功能 · DexKit · ${BuildConfig.XPOSED_API_LABEL}") },
-            leadingContent = { Icon(Icons.Outlined.CheckCircle, null, Modifier.size(28.dp)) },
+            supportingContent = {
+                Text("$featureCount 个功能 · ${BuildConfig.XPOSED_API_LABEL}\n$preferenceStatus")
+            },
+            leadingContent = {
+                Icon(
+                    if (remoteReady) Icons.Outlined.CheckCircle else Icons.Outlined.WarningAmber,
+                    null,
+                    Modifier.size(28.dp),
+                )
+            },
             trailingContent = {
                 Surface(
                     color = MaterialTheme.colorScheme.primary,
@@ -184,7 +193,7 @@ private fun ModuleStatus(featureCount: Int) {
                     shape = RoundedCornerShape(8.dp),
                 ) {
                     Text(
-                        "READY",
+                        if (remoteReady) "READY" else "LIMITED",
                         Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.labelSmall,
                     )
@@ -221,13 +230,14 @@ private fun SegmentedGroup(content: @Composable ColumnScope.() -> Unit) {
 private fun HookRow(
     context: Context,
     record: HookRecord,
-    preferences: SharedPreferences,
+    preferences: SharedPreferences?,
     onOpen: () -> Unit,
 ) {
     val feature = record.feature
     val metadata = feature.metadata
-    var enabled by remember(metadata.id) {
-        mutableStateOf(metadata.uiType == HookUiType.API || preferences.getBoolean(enabledKey(metadata.id), false))
+    var enabled by remember(metadata.id, preferences) {
+        mutableStateOf(metadata.uiType == HookUiType.API ||
+            preferences?.getBoolean(enabledKey(metadata.id), false) == true)
     }
     val icon = when (metadata.uiType) {
         HookUiType.SWITCH -> Icons.Outlined.Bolt
@@ -279,9 +289,10 @@ private fun HookRow(
                     }
                     Switch(
                         checked = enabled,
+                        enabled = preferences != null,
                         onCheckedChange = {
                             enabled = it
-                            preferences.edit().putBoolean(enabledKey(metadata.id), it).apply()
+                            preferences?.edit()?.putBoolean(enabledKey(metadata.id), it)?.apply()
                         },
                     )
                 }
@@ -311,12 +322,12 @@ private fun FeatureIcon(icon: ImageVector) {
 @Composable
 private fun HookDetailsSheet(
     record: HookRecord,
-    preferences: SharedPreferences,
+    preferences: SharedPreferences?,
     onDismiss: () -> Unit,
 ) {
     val metadata = record.feature.metadata
     val enabled = metadata.uiType == HookUiType.API ||
-        preferences.getBoolean(enabledKey(metadata.id), false)
+        preferences?.getBoolean(enabledKey(metadata.id), false) == true
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -346,7 +357,7 @@ private fun HookDetailsSheet(
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp))
                 DetailRow("重启策略", metadata.restartPolicy.name)
             }
-            if (record.feature.options.isNotEmpty()) {
+            if (record.feature.options.isNotEmpty() && preferences != null) {
                 Text(
                     "功能设置",
                     Modifier.padding(start = 12.dp),

@@ -6,7 +6,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
         <meta-data android:name="xposedmodule" android:value="true" />
-        <!-- Allow LSPosed/XSharedPreferences to expose module settings to host processes. -->
         <meta-data android:name="xposedsharedprefs" android:value="true" />
         <meta-data android:name="xposeddescription" android:value="@string/module_description" />
         <meta-data android:name="xposedminversion" android:value="82" />
