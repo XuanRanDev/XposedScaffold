@@ -1,3 +1,5 @@
+import java.time.Instant
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,6 +10,7 @@ plugins {
 val xposedTargetPackage = providers.gradleProperty("xposedTargetPackage").get()
 val xposedModulePackage = providers.gradleProperty("xposedModulePackage").get()
 val xposedModuleName = providers.gradleProperty("xposedModuleName").get()
+val buildTime = Instant.now().toString()
 require(xposedTargetPackage.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+"))) {
     "xposedTargetPackage must be a valid Android package name"
 }
@@ -24,6 +27,7 @@ android {
         versionName = "0.1.0"
 
         buildConfigField("String", "XPOSED_TARGET_PACKAGE", "\"$xposedTargetPackage\"")
+        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
         resValue("string", "xposed_target_package", xposedTargetPackage)
         resValue("string", "app_name", xposedModuleName)
 
