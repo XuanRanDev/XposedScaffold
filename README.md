@@ -2,6 +2,8 @@
 
 A modern, reusable Xposed module foundation under the `dev.xuanran` namespace.
 
+The project borrows the proven separation used by mature modules such as QAuxiliary—framework loaders, startup, hook API, runtime and feature code are separate—but intentionally leaves out native hooks, hidden DEX, SO protection, Frida and hot updates.
+
 ## What is included
 
 - A `legacy` flavor containing only the Xposed API 82 entry.
@@ -35,10 +37,10 @@ No feature code should depend directly on a loader. Ordinary features depend on 
 
 1. Replace `dev.xuanran.xposedscaffold` with your final application ID.
 2. Replace `com.example.target` in:
-   - `app/src/main/res/values/strings.xml`
-   - `loader/modern/src/main/resources/META-INF/xposed/scope.list`
-   - `loader/legacy/.../TargetScope`
-   - the sample `@HookItem` declaration
+    - `app/src/main/res/values/strings.xml`
+    - `loader/modern/src/main/resources/META-INF/xposed/scope.list`
+    - `loader/legacy/.../TargetScope`
+    - the sample `@HookItem` declaration
 3. Rename the application and description.
 4. Delete or rewrite `SampleHook`.
 5. Keep feature IDs stable after publishing; they are configuration keys.
