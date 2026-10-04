@@ -10,6 +10,7 @@ import dev.xuanran.xposed.api.HookStage
 import dev.xuanran.xposed.api.HookState
 import dev.xuanran.xposed.api.HookUiType
 import dev.xuanran.xposed.api.HostEnvironment
+import dev.xuanran.xposed.api.ModuleConfig
 
 /**
  * 功能生命周期调度器。
@@ -76,7 +77,7 @@ object HookRuntime {
                 record.update(HookState.Active)
                 environment.hookBridge.log(
                     android.util.Log.INFO,
-                    "XposedScaffold",
+                    ModuleConfig.LOG_TAG,
                     "Installed hook ${metadata.id} in ${environment.packageName}/${environment.processName}",
                 )
             } catch (throwable: Throwable) {
@@ -92,7 +93,7 @@ object HookRuntime {
             ("main" in targets && processName == packageName)
 
     private fun logSkip(environment: HostEnvironment, hookId: String, reason: String) {
-        environment.hookBridge.log(android.util.Log.INFO, "XposedScaffold", "Skipped hook $hookId: $reason")
+        environment.hookBridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Skipped hook $hookId: $reason")
     }
 
     private fun reportFailure(
@@ -110,7 +111,7 @@ object HookRuntime {
         )
         environment.hookBridge.log(
             android.util.Log.ERROR,
-            "XposedScaffold",
+            ModuleConfig.LOG_TAG,
             "Hook $hookId failed during $stage in ${environment.packageName}/${environment.processName}",
             throwable,
         )

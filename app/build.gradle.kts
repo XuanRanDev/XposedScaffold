@@ -6,6 +6,8 @@ plugins {
 }
 
 val xposedTargetPackage = providers.gradleProperty("xposedTargetPackage").get()
+val xposedModulePackage = providers.gradleProperty("xposedModulePackage").get()
+val xposedModuleName = providers.gradleProperty("xposedModuleName").get()
 require(xposedTargetPackage.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+"))) {
     "xposedTargetPackage must be a valid Android package name"
 }
@@ -15,7 +17,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "dev.xuanran.xposedscaffold"
+        applicationId = xposedModulePackage
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -23,6 +25,7 @@ android {
 
         buildConfigField("String", "XPOSED_TARGET_PACKAGE", "\"$xposedTargetPackage\"")
         resValue("string", "xposed_target_package", xposedTargetPackage)
+        resValue("string", "app_name", xposedModuleName)
 
     }
 

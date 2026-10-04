@@ -7,6 +7,7 @@ import de.robv.android.xposed.XposedBridge
 import dev.xuanran.xposed.api.HookBridge
 import dev.xuanran.xposed.api.HookCallback
 import dev.xuanran.xposed.api.HookParam
+import dev.xuanran.xposed.api.ModuleConfig
 import dev.xuanran.xposed.api.UnhookHandle
 import java.lang.reflect.Executable
 
@@ -32,11 +33,11 @@ object LegacyHookBridge : HookBridge {
 
     override fun remotePreferences(name: String): SharedPreferences =
         // XSharedPreferences 自带只读刷新语义，模块 UI 写入后宿主重启即可读取新值。
-        XSharedPreferences("dev.xuanran.xposedscaffold", name).apply {
+        XSharedPreferences(ModuleConfig.PACKAGE, name).apply {
             reload()
             if (!file.canRead()) {
                 XposedBridge.log(
-                    "[XposedScaffold] Module preferences are not readable: $file; " +
+                    "[${ModuleConfig.LOG_TAG}] Module preferences are not readable: $file; " +
                         "SwitchHook values will fall back to defaults",
                 )
             }

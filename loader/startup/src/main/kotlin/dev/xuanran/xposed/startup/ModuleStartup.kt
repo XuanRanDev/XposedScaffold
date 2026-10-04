@@ -8,6 +8,7 @@ import dev.xuanran.xposed.api.HookCallback
 import dev.xuanran.xposed.api.HookFeature
 import dev.xuanran.xposed.api.HookParam
 import dev.xuanran.xposed.api.HostEnvironment
+import dev.xuanran.xposed.api.ModuleConfig
 import dev.xuanran.xposed.dexkit.DexKitResolver
 import dev.xuanran.xposed.runtime.HookRegistry
 import dev.xuanran.xposed.runtime.HookRuntime
@@ -34,17 +35,17 @@ object ModuleStartup {
     ) {
         if (installed) return
         installed = true
-        bridge.log(android.util.Log.INFO, "XposedScaffold", "Installing Application.attach hook")
+        bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Installing Application.attach hook")
         // Application.attach 在绝大多数常规应用中早于 onCreate，且已经持有可用 base Context。
         val attach = Application::class.java.getDeclaredMethod("attach", Context::class.java)
         bridge.hook(attach, callback = object : HookCallback {
             override fun after(param: HookParam) {
                 val application = param.thisObject as? Application ?: return
-                bridge.log(android.util.Log.INFO, "XposedScaffold", "Application attached; starting hook runtime")
+                bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Application attached; starting hook runtime")
                 try {
                     start(application, packageName, processName, classLoader, bridge)
                 } catch (throwable: Throwable) {
-                    bridge.log(android.util.Log.ERROR, "XposedScaffold", "Hook runtime startup failed", throwable)
+                    bridge.log(android.util.Log.ERROR, ModuleConfig.LOG_TAG, "Hook runtime startup failed", throwable)
                 }
             }
         })
@@ -63,17 +64,17 @@ object ModuleStartup {
         val versionCode = application.packageManager.getPackageInfo(packageName, 0).longVersionCode
         // 注册表位于模块 APK，因此必须用模块 ClassLoader 加载，不能使用宿主 ClassLoader。
         val features = loadGeneratedHooks()
-        bridge.log(android.util.Log.INFO, "XposedScaffold", "Loaded ${features.size} generated hook(s)")
+        bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Loaded ${features.size} generated hook(s)")
         HookRegistry.register(features)
-        val preferences = bridge.remotePreferences("xposed_scaffold")
+        val preferences = bridge.remotePreferences(ModuleConfig.PREFERENCES_NAME)
             // 后备配置主要用于测试环境；生产框架应优先提供远程偏好。
-            ?: application.getSharedPreferences("xposed_scaffold", Context.MODE_PRIVATE)
+            ?: application.getSharedPreferences(ModuleConfig.PREFERENCES_NAME, Context.MODE_PRIVATE)
         val config = SharedPreferencesHookConfig(preferences)
         val dex = DexKitResolver(
             apkPath = application.applicationInfo.sourceDir,
             hostVersion = versionCode,
             classLoader = classLoader,
-            cache = application.getSharedPreferences("xposed_scaffold_dex", Context.MODE_PRIVATE),
+            cache = application.getSharedPreferences(ModuleConfig.DEX_PREFERENCES_NAME, Context.MODE_PRIVATE),
         )
         HookRuntime.initialize(
             HostEnvironment(packageName, processName, versionCode, classLoader, application, bridge),
@@ -81,7 +82,7 @@ object ModuleStartup {
             dex,
             InMemoryErrorStore,
         )
-        bridge.log(android.util.Log.INFO, "XposedScaffold", "Hook runtime initialized")
+        bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Hook runtime initialized")
     }
 
     @Suppress("UNCHECKED_CAST")

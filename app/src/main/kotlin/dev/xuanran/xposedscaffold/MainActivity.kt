@@ -82,7 +82,7 @@ private fun ScaffoldTheme(content: @Composable () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModuleHome(context: Context) {
-    val preferences = remember { context.getSharedPreferences("xposed_scaffold", Context.MODE_PRIVATE) }
+    val preferences = remember { context.getSharedPreferences(ModuleConfig.PREFERENCES_NAME, Context.MODE_PRIVATE) }
     val records = remember { HookRegistry.all() }
     var query by remember { mutableStateOf("") }
     var selectedRecord by remember { mutableStateOf<HookRecord?>(null) }
@@ -102,7 +102,7 @@ private fun ModuleHome(context: Context) {
             LargeTopAppBar(
                 title = {
                     Column {
-                        Text("Xposed Scaffold", fontWeight = FontWeight.Bold)
+                        Text(ModuleConfig.NAME, fontWeight = FontWeight.Bold)
                         Text(
                             "通用模块控制台",
                             style = MaterialTheme.typography.labelMedium,

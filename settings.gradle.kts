@@ -21,7 +21,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "XposedScaffold"
+rootProject.name = providers.gradleProperty("xposedProjectName").get()
 
 include(
     ":app",

@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">Xposed Scaffold</string>
     <string name="module_description">A modern, reusable Xposed module scaffold.</string>
     <string-array name="xposed_scope">
         <item>@string/xposed_target_package</item>

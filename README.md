@@ -1,5 +1,20 @@
 # Xposed Scaffold
 
+## 模板配置
+
+创建新模块时，集中修改根目录 `gradle.properties` 中的以下字段即可：
+
+```properties
+xposedTargetPackage=com.example.target
+xposedProjectName=XposedScaffold
+xposedModuleName=Xposed Scaffold
+xposedModulePackage=dev.xuanran.xposedscaffold
+xposedLogTag=XposedScaffold
+xposedPreferencesName=xposed_scaffold
+```
+
+其中 `xposedModulePackage` 控制最终 APK 的 applicationId。源码 namespace 和 Kotlin 包路径是脚手架内部实现，通常无需随模块身份修改。
+
 A modern, reusable Xposed module foundation under the `dev.xuanran` namespace.
 
 The project borrows the proven separation used by mature modules such as QAuxiliary—framework loaders, startup, hook API, runtime and feature code are separate—but intentionally leaves out native hooks, hidden DEX, SO protection, Frida and hot updates.
@@ -83,7 +98,7 @@ Keep expensive searches out of ordinary startup where possible. A production pro
 
 ## Configuration note
 
-Modern libxposed uses framework-provided remote preferences. The legacy adapter uses `XSharedPreferences`. If a target framework cannot read the module preference XML, replace `HookConfig` with a ContentProvider or another cross-process implementation. The hook and UI layers do not need to change.
+Modern libxposed uses framework-provided remote preferences. The legacy flavor declares `xposedsharedprefs` and reads the same setting through `XSharedPreferences`; after changing a switch, restart the target application so its process reloads the value.
 
 ## Design rules
 

@@ -48,7 +48,7 @@ fun HookContext.hook(
                 )
                 bridge.log(
                     android.util.Log.ERROR,
-                    "XposedScaffold",
+                    ModuleConfig.LOG_TAG,
                     "Hook callback failed: $hookId $phase ${param.executable}",
                     throwable,
                 )
