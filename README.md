@@ -116,34 +116,34 @@ variant that packages both loader modules: an API 100-era framework may see the
 modern entry metadata but still reflect the obsolete two-argument constructor,
 which fails before module initialization.
 
-## 打包 Release APK
+## 打包无签名 Release APK
 
-### 1. 选择正确的 flavor
+### 选择正确的 flavor
 
 | Flavor | 使用场景 | Release 任务 |
 | --- | --- | --- |
 | `legacy` | 传统 LSPosed、Xposed API 82，或出现 modern 入口双参数构造器错误的框架 | `:app:assembleLegacyRelease` |
 | `modern` | 明确支持 libxposed API 101/102 的框架 | `:app:assembleModernRelease` |
 
-两个 flavor 使用相同的 application ID，不能同时安装。升级已安装版本时还必须使用
-相同的签名证书，否则 Android 会提示签名不一致。
+两个 flavor 使用相同的 application ID，不能同时安装。项目位于
+`E:\Code\Kotlin\XposedScaffold`，在 PowerShell 中直接执行以下一行命令即可。
 
-### 2. 构建 unsigned Release
-
-在项目根目录执行：
+构建传统 API 82 的无签名 Release：
 
 ```powershell
-# 传统 API 82 版本
-.\gradlew.bat :app:assembleLegacyRelease
-
-# libxposed API 101/102 版本
-.\gradlew.bat :app:assembleModernRelease
+Set-Location -LiteralPath "E:\Code\Kotlin\XposedScaffold"; .\gradlew.bat :app:assembleLegacyRelease
 ```
 
-也可以一次构建两个 Release：
+构建 libxposed API 101/102 的无签名 Release：
 
 ```powershell
-.\gradlew.bat :app:assembleRelease
+Set-Location -LiteralPath "E:\Code\Kotlin\XposedScaffold"; .\gradlew.bat :app:assembleModernRelease
+```
+
+一次构建两个无签名 Release：
+
+```powershell
+Set-Location -LiteralPath "E:\Code\Kotlin\XposedScaffold"; .\gradlew.bat :app:assembleRelease
 ```
 
 默认输出位置：
@@ -153,63 +153,5 @@ app/build/outputs/apk/legacy/release/app-legacy-release-unsigned.apk
 app/build/outputs/apk/modern/release/app-modern-release-unsigned.apk
 ```
 
-项目没有把发布证书写入仓库，因此命令行生成的是 unsigned APK，不能直接安装。
-不要把 keystore、alias 密码或 store 密码提交到 Git。
-
-### 3. 创建发布证书
-
-只需创建一次，并妥善备份。丢失证书后将无法覆盖升级此前发布的 APK：
-
-```powershell
-keytool -genkeypair -v `
-  -keystore release.jks `
-  -alias release `
-  -keyalg RSA `
-  -keysize 4096 `
-  -validity 10000
-```
-
-### 4. 对 APK 对齐并签名
-
-`zipalign` 和 `apksigner` 位于 Android SDK 的
-`build-tools/<版本>/` 目录。下面以 legacy 版本为例，请把
-`<ANDROID_SDK>` 和 `<BUILD_TOOLS_VERSION>` 替换为本机实际路径：
-
-```powershell
-& "<ANDROID_SDK>\build-tools\<BUILD_TOOLS_VERSION>\zipalign.exe" `
-  -p -f 4 `
-  "app\build\outputs\apk\legacy\release\app-legacy-release-unsigned.apk" `
-  "app\build\outputs\apk\legacy\release\app-legacy-release-aligned.apk"
-
-& "<ANDROID_SDK>\build-tools\<BUILD_TOOLS_VERSION>\apksigner.bat" sign `
-  --ks "release.jks" `
-  --ks-key-alias "release" `
-  --out "app\build\outputs\apk\legacy\release\app-legacy-release.apk" `
-  "app\build\outputs\apk\legacy\release\app-legacy-release-aligned.apk"
-```
-
-modern 版本的步骤相同，只需把路径和文件名中的 `legacy` 替换为 `modern`。
-`apksigner` 会交互式读取密码，避免把密码留在命令历史或脚本中。
-
-### 5. 验证签名
-
-```powershell
-& "<ANDROID_SDK>\build-tools\<BUILD_TOOLS_VERSION>\apksigner.bat" verify `
-  --verbose --print-certs `
-  "app\build\outputs\apk\legacy\release\app-legacy-release.apk"
-```
-
-看到 `Verifies` 即表示签名验证通过。安装后还需要在 Xposed 管理器中启用模块、
-选择目标作用域，并强制停止后重新启动目标应用。
-
-### 使用 Android Studio 签名
-
-不想手动调用签名工具时，可以选择：
-
-```text
-Build → Generate Signed App Bundle or APK → APK
-```
-
-选择 `app` 模块、发布证书、`release` Build Type，并确认构建的是
-`legacyRelease` 或 `modernRelease`。首次使用或不确定框架 API 版本时，
-优先构建 `legacyRelease`。
+这些文件没有 Release 签名，不能直接覆盖安装到 Android 设备；本节仅用于生成
+未签名的发布构建。首次使用或不确定框架 API 版本时，优先构建 `legacyRelease`。
