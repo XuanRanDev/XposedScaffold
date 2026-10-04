@@ -234,7 +234,12 @@ private fun HookRow(
         HookUiType.API -> Icons.Outlined.Extension
     }
     val activateRow = {
-        if (metadata.uiType == HookUiType.ACTION) (feature as? ActionHook)?.run(context) else onOpen()
+        if (metadata.uiType == HookUiType.ACTION) {
+            (feature as? ActionHook)?.run(context)
+            Unit
+        } else {
+            onOpen()
+        }
     }
 
     ListItem(
