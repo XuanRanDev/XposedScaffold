@@ -15,6 +15,13 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+
+        // The scaffold targets modern 64-bit Android devices only. Limiting the
+        // packaged ABI here removes the unused DexKit and AndroidX native
+        // libraries for armeabi-v7a, x86 and x86_64 from every APK variant.
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     // One APK must expose exactly one Xposed entry ABI. Mixing API 82 assets with
