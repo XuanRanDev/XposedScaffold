@@ -23,7 +23,36 @@ fun HookContext.hook(
 ): UnhookHandle {
     val spec = HookBuilder().apply(block)
     return bridge.hook(executable, priority, object : HookCallback {
-        override fun before(param: HookParam) { spec.before?.invoke(param) }
-        override fun after(param: HookParam) { spec.after?.invoke(param) }
+        override fun before(param: HookParam) { runSafely("before", param, spec.before) }
+        override fun after(param: HookParam) { runSafely("after", param, spec.after) }
+
+        private fun runSafely(
+            phase: String,
+            param: HookParam,
+            callback: (HookParam.() -> Unit)?,
+        ) {
+            if (callback == null) return
+            try {
+                callback(param)
+            } catch (throwable: Throwable) {
+                errors.report(
+                    HookFailure(
+                        hookId = hookId,
+                        stage = HookStage.CALLBACK,
+                        packageName = environment.packageName,
+                        processName = environment.processName,
+                        hostVersion = environment.versionCode,
+                        timestamp = System.currentTimeMillis(),
+                        throwable = throwable,
+                    ),
+                )
+                bridge.log(
+                    android.util.Log.ERROR,
+                    "XposedScaffold",
+                    "Hook callback failed: $hookId $phase ${param.executable}",
+                    throwable,
+                )
+            }
+        }
     })
 }

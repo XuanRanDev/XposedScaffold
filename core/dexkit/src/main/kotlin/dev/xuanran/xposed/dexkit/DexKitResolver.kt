@@ -26,18 +26,17 @@ class DexKitResolver(
         // 快路径：先尝试从持久化描述符恢复，正常启动无需重新扫描整个 APK。
         val unresolved = dexFeature.dexKitTargets.filterNot { loadCached(feature.metadata.id, it) }
         if (unresolved.isEmpty()) return true
-        return runCatching {
-            // 只有确实存在失效目标时才创建 DexKitBridge；use 确保 native 资源及时释放。
-            DexKitBridge.create(apkPath).use { bridge ->
-                unresolved.forEach { target ->
-                    val descriptor = target.find(bridge)
-                    val member = target.resolve(classLoader, descriptor)
-                    resolved[target.key] = member
-                    cache.edit().putString(cacheKey(feature.metadata.id, target), descriptor).apply()
-                }
+        // 只有确实存在失效目标时才创建 DexKitBridge；use 确保 native 资源及时释放。
+        // 查询异常必须交给 Runtime 记录，不能折叠成一个没有原因的 false。
+        DexKitBridge.create(apkPath).use { bridge ->
+            unresolved.forEach { target ->
+                val descriptor = target.find(bridge)
+                val member = target.resolve(classLoader, descriptor)
+                resolved[target.key] = member
+                cache.edit().putString(cacheKey(feature.metadata.id, target), descriptor).apply()
             }
-            true
-        }.getOrDefault(false)
+        }
+        return true
     }
 
     private fun loadCached(featureId: String, target: DexKitTarget<out Any>): Boolean {

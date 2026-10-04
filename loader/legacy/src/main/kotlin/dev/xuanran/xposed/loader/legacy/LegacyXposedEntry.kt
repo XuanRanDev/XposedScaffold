@@ -1,6 +1,7 @@
 package dev.xuanran.xposed.loader.legacy
 
 import de.robv.android.xposed.IXposedHookLoadPackage
+import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 import dev.xuanran.xposed.startup.ModuleStartup
 
@@ -8,13 +9,18 @@ import dev.xuanran.xposed.startup.ModuleStartup
 class LegacyXposedEntry : IXposedHookLoadPackage {
     override fun handleLoadPackage(param: XC_LoadPackage.LoadPackageParam) {
         if (!TargetScope.contains(param.packageName)) return
-        ModuleStartup.install(param.packageName, param.processName, param.classLoader, LegacyHookBridge)
+        val process = param.processName ?: param.packageName
+        try {
+            ModuleStartup.install(param.packageName, process, param.classLoader, LegacyHookBridge)
+        } catch (throwable: Throwable) {
+            XposedBridge.log(throwable)
+        }
     }
 }
 
 object TargetScope {
     // 传统 API 没有 scope.list 回调过滤，必须在入口主动筛选。
     // 请与 loader/modern/src/main/resources/META-INF/xposed/scope.list 保持一致。
-    private val packages = setOf("com.example.target")
+    private val packages = setOf(BuildConfig.XPOSED_TARGET_PACKAGE)
     fun contains(packageName: String) = packageName in packages
 }

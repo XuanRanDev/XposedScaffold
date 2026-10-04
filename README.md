@@ -36,11 +36,8 @@ No feature code should depend directly on a loader. Ordinary features depend on 
 ## Start a real module
 
 1. Replace `dev.xuanran.xposedscaffold` with your final application ID.
-2. Replace `com.example.target` in:
-    - `app/src/main/res/values/strings.xml`
-    - `loader/modern/src/main/resources/META-INF/xposed/scope.list`
-    - `loader/legacy/.../TargetScope`
-    - the sample `@HookItem` declaration
+2. Set `xposedTargetPackage` once in the root `gradle.properties`. Gradle injects it into
+   the sample metadata, legacy loader, modern loader and legacy recommended scope.
 3. Rename the application and description.
 4. Delete or rewrite `SampleHook`.
 5. Keep feature IDs stable after publishing; they are configuration keys.

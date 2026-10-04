@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val xposedTargetPackage = providers.gradleProperty("xposedTargetPackage").get()
+require(xposedTargetPackage.matches(Regex("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z][A-Za-z0-9_]*)+"))) {
+    "xposedTargetPackage must be a valid Android package name"
+}
+
 android {
     namespace = "dev.xuanran.xposedscaffold"
     compileSdk = 36
@@ -16,12 +21,9 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
-        // The scaffold targets modern 64-bit Android devices only. Limiting the
-        // packaged ABI here removes the unused DexKit and AndroidX native
-        // libraries for armeabi-v7a, x86 and x86_64 from every APK variant.
-        ndk {
-            abiFilters += "arm64-v8a"
-        }
+        buildConfigField("String", "XPOSED_TARGET_PACKAGE", "\"$xposedTargetPackage\"")
+        resValue("string", "xposed_target_package", xposedTargetPackage)
+
     }
 
     // One APK must expose exactly one Xposed entry ABI. Mixing API 82 assets with

@@ -18,7 +18,11 @@ abstract class BaseHookFeature : HookFeature {
             title = item.title,
             description = item.description,
             keywords = item.keywords.toSet(),
-            uiType = item.type,
+            uiType = when (this) {
+                is ApiHook -> dev.xuanran.xposed.api.HookUiType.API
+                is ActionHook -> dev.xuanran.xposed.api.HookUiType.ACTION
+                else -> item.type
+            },
             targetPackages = item.targetPackages.toSet(),
             targetProcesses = item.targetProcesses.toSet(),
             minHostVersion = item.minHostVersion,

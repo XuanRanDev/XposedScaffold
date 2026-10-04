@@ -67,6 +67,7 @@ data class DexTargetSpec(
  * 将环境、Hook、DexKit、配置和错误通道集中传入，避免使用难以测试的全局变量。
  */
 class HookContext(
+    val hookId: String,
     val environment: HostEnvironment,
     val dex: DexResolver,
     val config: HookConfig,

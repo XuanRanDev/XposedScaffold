@@ -18,4 +18,5 @@ kotlin { jvmToolchain(17) }
 dependencies {
     api(projects.core.api)
     implementation(libs.kotlinx.coroutines.core)
+    testImplementation(libs.junit4)
 }

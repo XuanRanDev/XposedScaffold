@@ -18,7 +18,7 @@ class ModernXposedEntry : XposedModule() {
 
     override fun onPackageReady(param: XposedModuleInterface.PackageReadyParam) {
         // PackageReady 能拿到最终 ClassLoader，比 PackageLoaded 更适合存在 AppComponentFactory 的宿主。
-        if (param.packageName != "com.example.target") return
+        if (param.packageName != BuildConfig.XPOSED_TARGET_PACKAGE) return
         ModuleStartup.install(param.packageName, processName, param.classLoader, bridge)
     }
 }
