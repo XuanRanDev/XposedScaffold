@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -110,7 +111,7 @@ private fun ModuleHome(context: Context) {
                     }
                 },
                 scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 ),
@@ -270,7 +271,7 @@ private fun HookRow(
                 HookUiType.SWITCH -> Row(verticalAlignment = Alignment.CenterVertically) {
                     if (feature.options.isNotEmpty()) {
                         Icon(
-                            Icons.Outlined.ArrowForwardIos,
+                            Icons.AutoMirrored.Outlined.ArrowForwardIos,
                             "打开设置",
                             Modifier.size(14.dp).clickable(onClick = onOpen),
                         )
@@ -284,7 +285,7 @@ private fun HookRow(
                         },
                     )
                 }
-                HookUiType.ACTION -> Icon(Icons.Outlined.ArrowForwardIos, null, Modifier.size(16.dp))
+                HookUiType.ACTION -> Icon(Icons.AutoMirrored.Outlined.ArrowForwardIos, null, Modifier.size(16.dp))
                 HookUiType.API -> StatusDot(MaterialTheme.colorScheme.primary)
             }
         },
