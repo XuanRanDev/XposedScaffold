@@ -28,6 +28,7 @@ class DexKitResolver(
         if (unresolved.isEmpty()) return true
         // 只有确实存在失效目标时才创建 DexKitBridge；use 确保 native 资源及时释放。
         // 查询异常必须交给 Runtime 记录，不能折叠成一个没有原因的 false。
+        DexKitNativeLoader.load()
         DexKitBridge.create(apkPath).use { bridge ->
             unresolved.forEach { target ->
                 val descriptor = target.find(bridge)
@@ -62,4 +63,19 @@ class DexKitResolver(
 
     private fun cacheKey(featureId: String, target: DexKitTarget<out Any>) =
         "dex.$featureId.${target.key}.v$hostVersion.r${target.revision}"
+}
+
+/** DexKit 2.x 不会在 [DexKitBridge] 内部自动加载 JNI 库。 */
+private object DexKitNativeLoader {
+    @Volatile
+    private var loaded = false
+
+    fun load() {
+        if (loaded) return
+        synchronized(this) {
+            if (loaded) return
+            System.loadLibrary("dexkit")
+            loaded = true
+        }
+    }
 }
