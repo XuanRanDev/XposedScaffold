@@ -7,6 +7,12 @@
 # to fail as soon as it evaluates feature.metadata.
 -keepattributes RuntimeVisibleAnnotations,AnnotationDefault
 
+# R8 full mode treats annotations and annotated classes as separate liveness endpoints. Keeping
+# only the attribute is not enough: pin the annotation type and every HookItem endpoint while
+# still allowing their implementation names and bytecode to be optimized.
+-keep @interface dev.xuanran.xposed.api.HookItem
+-keep,allowoptimization,allowobfuscation @dev.xuanran.xposed.api.HookItem class *
+
 # ModuleStartup loads the KSP-generated top-level createHooks function by its stable JVM name.
 -keep class dev.xuanran.xposed.generated.GeneratedHookRegistryKt {
     public static java.util.List createHooks();
