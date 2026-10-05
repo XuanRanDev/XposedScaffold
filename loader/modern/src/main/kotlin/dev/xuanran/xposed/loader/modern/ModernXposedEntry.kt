@@ -11,6 +11,12 @@ import dev.xuanran.xposed.startup.ModuleStartup
 class ModernXposedEntry : XposedModule() {
     private var processName: String = ""
     private val bridge by lazy { ModernHookBridge(this) }
+    // Framework scope can be broader than the template configuration. Always enforce our own
+    // allowlist before touching the target ClassLoader or initializing DexKit.
+    private val targetPackages = BuildConfig.XPOSED_TARGET_PACKAGES
+        .split(',')
+        .filter(String::isNotBlank)
+        .toSet()
 
     override fun onModuleLoaded(param: XposedModuleInterface.ModuleLoadedParam) {
         processName = param.processName
@@ -18,7 +24,8 @@ class ModernXposedEntry : XposedModule() {
 
     override fun onPackageReady(param: XposedModuleInterface.PackageReadyParam) {
         // PackageReady 能拿到最终 ClassLoader，比 PackageLoaded 更适合存在 AppComponentFactory 的宿主。
-        if (param.packageName != BuildConfig.XPOSED_TARGET_PACKAGE) return
+        // This is the module-level filter; HookRuntime applies the feature-level package filter.
+        if (param.packageName !in targetPackages) return
         ModuleStartup.install(param.packageName, processName, param.classLoader, bridge)
     }
 }

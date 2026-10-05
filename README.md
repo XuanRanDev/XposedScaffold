@@ -5,7 +5,7 @@
 创建新模块时，集中修改根目录 `gradle.properties` 中的以下字段即可：
 
 ```properties
-xposedTargetPackage=com.example.target
+xposedTargetPackages=com.example.target,com.example.another
 xposedProjectName=XposedScaffold
 xposedModuleName=Xposed Scaffold
 xposedModulePackage=dev.xuanran.xposedscaffold
@@ -51,7 +51,7 @@ No feature code should depend directly on a loader. Ordinary features depend on 
 ## Start a real module
 
 1. Replace `dev.xuanran.xposedscaffold` with your final application ID.
-2. Set `xposedTargetPackage` once in the root `gradle.properties`. Gradle injects it into
+2. Set `xposedTargetPackages` once in the root `gradle.properties` as a comma-separated list. Gradle injects it into
    the sample metadata, legacy loader, modern loader and legacy recommended scope.
 3. Rename the application and description.
 4. Delete or rewrite `SampleHook`.

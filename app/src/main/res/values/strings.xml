@@ -1,6 +1,3 @@
 <resources>
     <string name="module_description">A modern, reusable Xposed module scaffold.</string>
-    <string-array name="xposed_scope">
-        <item>@string/xposed_target_package</item>
-    </string-array>
 </resources>

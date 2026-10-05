@@ -22,6 +22,7 @@ import dev.xuanran.xposed.runtime.SharedPreferencesHookConfig
  * ClassLoader 可用后再初始化功能，避免在 Zygote/包加载早期触发 AndroidX、DexKit 或配置系统。
  */
 object ModuleStartup {
+    // 每个宿主进程都有独立的模块 ClassLoader 和静态字段，因此这里的状态不会跨进程串扰。
     // installed 防止重复安装 attach Hook；started 防止同一进程重复初始化功能。
     private var installed = false
     private var started = false
@@ -33,6 +34,7 @@ object ModuleStartup {
         classLoader: ClassLoader,
         bridge: HookBridge,
     ) {
+        // 某些框架/应用生命周期可能重复派发包回调，入口必须保持幂等。
         if (installed) return
         installed = true
         bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Installing Application.attach hook")
@@ -41,6 +43,7 @@ object ModuleStartup {
         bridge.hook(attach, callback = object : HookCallback {
             override fun after(param: HookParam) {
                 val application = param.thisObject as? Application ?: return
+                // 使用 after：此时 baseContext 已写入 Application，系统服务和包信息均可安全访问。
                 bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Application attached; starting hook runtime")
                 try {
                     start(application, packageName, processName, classLoader, bridge)
@@ -61,16 +64,18 @@ object ModuleStartup {
     ) {
         if (started) return
         started = true
+        // 宿主版本参与 DexKit 缓存键和 Hook 的版本范围判断，不能使用模块自身版本。
         val versionCode = application.packageManager.getPackageInfo(packageName, 0).longVersionCode
         // 注册表位于模块 APK，因此必须用模块 ClassLoader 加载，不能使用宿主 ClassLoader。
         val features = loadGeneratedHooks()
         bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Loaded ${features.size} generated hook(s)")
         HookRegistry.register(features)
         val preferences = bridge.remotePreferences(ModuleConfig.PREFERENCES_NAME)
-            // 后备配置主要用于测试环境；生产框架应优先提供远程偏好。
+            // 后备配置也允许 Legacy 使用者自行向宿主进程注入配置页面；标准生产路径仍是远程偏好。
             ?: application.getSharedPreferences(ModuleConfig.PREFERENCES_NAME, Context.MODE_PRIVATE)
         val config = SharedPreferencesHookConfig(preferences)
         val dex = DexKitResolver(
+            // 扫描目标必须是宿主 APK；传入模块 APK 会导致所有匹配都为空。
             apkPath = application.applicationInfo.sourceDir,
             hostVersion = versionCode,
             classLoader = classLoader,
@@ -87,6 +92,7 @@ object ModuleStartup {
 
     @Suppress("UNCHECKED_CAST")
     private fun loadGeneratedHooks(): List<HookFeature> {
+        // ModuleStartup 类本身来自模块 APK，因此它的 ClassLoader 是定位 KSP 产物最稳定的锚点。
         val moduleClassLoader = checkNotNull(ModuleStartup::class.java.classLoader)
         val registry = moduleClassLoader.loadClass("dev.xuanran.xposed.generated.GeneratedHookRegistryKt")
         // 反射只发生一次，用来切断 startup -> app 的编译期循环依赖。

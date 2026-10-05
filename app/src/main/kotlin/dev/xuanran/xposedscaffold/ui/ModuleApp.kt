@@ -3,9 +3,6 @@ package dev.xuanran.xposedscaffold.ui
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -20,18 +17,23 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import dev.xuanran.xposedscaffold.R
 import dev.xuanran.xposedscaffold.ui.screens.FeaturesScreen
 import dev.xuanran.xposedscaffold.ui.screens.HomeScreen
 
 @Composable
 fun ModuleApp() {
+    // 页面数量很少时不引入 Navigation Compose，可减少模板依赖和路由样板代码。
+    // 后续增加日志/设置等深层页面时，再把这个局部状态替换成 NavHost 即可。
     var page by remember { mutableIntStateOf(0) }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         bottomBar = {
             Surface(
+                // navigationBarsPadding 防止胶囊导航被手势条遮挡；外层留白形成悬浮视觉。
                 modifier = Modifier.navigationBarsPadding().padding(horizontal = 22.dp, vertical = 10.dp),
                 shape = RoundedCornerShape(32.dp),
                 color = MaterialTheme.colorScheme.surface,
@@ -42,7 +44,7 @@ fun ModuleApp() {
                     NavigationBarItem(
                         selected = page == 0,
                         onClick = { page = 0 },
-                        icon = { Icon(Icons.Outlined.Home, "主页") },
+                        icon = { Icon(painterResource(R.drawable.ic_home), "主页") },
                         label = { Text("主页", fontWeight = FontWeight.SemiBold) },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primaryContainer,
@@ -51,7 +53,7 @@ fun ModuleApp() {
                     NavigationBarItem(
                         selected = page == 1,
                         onClick = { page = 1 },
-                        icon = { Icon(Icons.Outlined.Tune, "功能") },
+                        icon = { Icon(painterResource(R.drawable.ic_tune), "功能") },
                         label = { Text("功能", fontWeight = FontWeight.SemiBold) },
                         colors = NavigationBarItemDefaults.colors(
                             indicatorColor = MaterialTheme.colorScheme.primaryContainer,
@@ -61,6 +63,7 @@ fun ModuleApp() {
             }
         },
     ) { padding ->
+        // Scaffold 已计算状态栏和底部导航占用空间，页面只消费 padding，避免各页面重复处理。
         when (page) {
             0 -> HomeScreen(Modifier.padding(padding))
             else -> FeaturesScreen(Modifier.padding(padding))

@@ -20,7 +20,11 @@ class LegacyXposedEntry : IXposedHookLoadPackage {
 
 object TargetScope {
     // 传统 API 没有 scope.list 回调过滤，必须在入口主动筛选。
-    // 请与 loader/modern/src/main/resources/META-INF/xposed/scope.list 保持一致。
-    private val packages = setOf(BuildConfig.XPOSED_TARGET_PACKAGE)
+    // 列表由根 gradle.properties 生成，避免 Legacy、Modern 和设置页各维护一份包名。
+    private val packages = BuildConfig.XPOSED_TARGET_PACKAGES
+        .split(',')
+        .filter(String::isNotBlank)
+        .toSet()
+    // 这里是模块级粗过滤；进入 HookRuntime 后还会按每个 @HookItem.targetPackages 精确过滤。
     fun contains(packageName: String) = packageName in packages
 }

@@ -33,16 +33,19 @@ private class HookRegistryProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,
 ) : SymbolProcessor {
+    // 聚合文件只有一个；若每轮都生成会触发 FileAlreadyExistsException。
     private var generated = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
         // KSP 可能多轮调用 process，聚合注册表只能生成一次。
         if (generated) return emptyList()
         val symbols = resolver.getSymbolsWithAnnotation(HOOK_ITEM).toList()
+        // 尚未完成类型解析的符号必须交还 KSP 下一轮，不能静默丢掉。
         val deferred = symbols.filterNot { it.validate() }
         if (deferred.isNotEmpty()) return deferred
 
         val classes = symbols.filterIsInstance<KSClassDeclaration>()
+        // ID 会进入 SharedPreferences key 和错误记录，重复会让两个功能共享状态。
         val ids = mutableSetOf<String>()
         classes.forEach { declaration ->
             // object 能保证进程内单例，也避免生成代码猜测构造函数参数。
@@ -67,6 +70,7 @@ private class HookRegistryProcessor(
         FileSpec.builder("dev.xuanran.xposed.generated", "GeneratedHookRegistry")
             .addFunction(function)
             .build()
+            // aggregating=true：任一 HookItem 增删都必须重新生成整个注册表。
             .writeTo(codeGenerator, Dependencies(true, *classes.mapNotNull { it.containingFile }.toTypedArray()))
         generated = true
         return emptyList()
