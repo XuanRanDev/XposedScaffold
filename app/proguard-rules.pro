@@ -4,6 +4,15 @@
 -keep class dev.xuanran.xposed.loader.legacy.LegacyXposedEntry { *; }
 -keep class dev.xuanran.xposed.loader.modern.ModernXposedEntry { *; }
 
+# Hook callbacks cross the module/framework boundary too. Match the legacy ABI methods directly
+# because compileOnly framework types are unavailable to R8's hierarchy analysis. The modern
+# adapter uses a stable named Hooker so it can be kept without relying on synthetic lambda names.
+-keepclasseswithmembers class * {
+    protected void beforeHookedMethod(de.robv.android.xposed.XC_MethodHook$MethodHookParam);
+    protected void afterHookedMethod(de.robv.android.xposed.XC_MethodHook$MethodHookParam);
+}
+-keep class dev.xuanran.xposed.loader.modern.ModernHooker { *; }
+
 # BaseHookFeature reads @HookItem and its default values at runtime. R8 may otherwise keep the
 # generated object reference while discarding the class annotation, causing the settings Activity
 # to fail as soon as it evaluates feature.metadata.

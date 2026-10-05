@@ -19,22 +19,7 @@ class ModernHookBridge(private val module: XposedModule) : HookBridge {
         val handle = module.hook(executable)
             .setPriority(priority)
             .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
-            .intercept { chain ->
-                val param = ModernParam(chain)
-                callback.before(param)
-                // before 未提前给出结果/异常时才继续执行链，修改后的 args 会传给后续 Hook。
-                if (!param.hasResult) {
-                    try {
-                        param.result = chain.proceed(param.args)
-                    } catch (throwable: Throwable) {
-                        param.throwable = throwable
-                    }
-                }
-                callback.after(param)
-                // after 最终决定向原调用者返回结果还是抛出异常。
-                param.throwable?.let { throw it }
-                param.result
-            }
+            .intercept(ModernHooker(callback))
         return UnhookHandle(handle::unhook)
     }
 
@@ -44,6 +29,26 @@ class ModernHookBridge(private val module: XposedModule) : HookBridge {
     }
 
     override fun remotePreferences(name: String): SharedPreferences = module.getRemotePreferences(name)
+}
+
+/** Stable, named framework callback boundary; kept explicitly from R8 in the app rules. */
+internal class ModernHooker(private val callback: HookCallback) : XposedInterface.Hooker {
+    override fun intercept(chain: XposedInterface.Chain): Any? {
+        val param = ModernParam(chain)
+        callback.before(param)
+        // before 未提前给出结果/异常时才继续执行链，修改后的 args 会传给后续 Hook。
+        if (!param.hasResult) {
+            try {
+                param.result = chain.proceed(param.args)
+            } catch (throwable: Throwable) {
+                param.throwable = throwable
+            }
+        }
+        callback.after(param)
+        // after 最终决定向原调用者返回结果还是抛出异常。
+        param.throwable?.let { throw it }
+        return param.result
+    }
 }
 
 /**

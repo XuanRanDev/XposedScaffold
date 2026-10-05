@@ -28,4 +28,6 @@ dependencies {
     implementation(projects.core.api)
     implementation(projects.loader.startup)
     compileOnly(libs.libxposed.api)
+    testImplementation(libs.libxposed.api)
+    testImplementation(libs.junit4)
 }
