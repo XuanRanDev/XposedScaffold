@@ -1,6 +1,8 @@
-# Xposed frameworks instantiate these entry points from packaged metadata rather than code references.
--keep class dev.xuanran.xposed.loader.legacy.LegacyXposedEntry { public <init>(); }
--keep class dev.xuanran.xposed.loader.modern.ModernXposedEntry { public <init>(); }
+# Xposed frameworks instantiate these entry points and invoke their callbacks from packaged
+# metadata. Keep every member: compileOnly framework APIs are absent during R8 analysis, so R8
+# cannot otherwise prove that callback implementations such as handleLoadPackage are reachable.
+-keep class dev.xuanran.xposed.loader.legacy.LegacyXposedEntry { *; }
+-keep class dev.xuanran.xposed.loader.modern.ModernXposedEntry { *; }
 
 # BaseHookFeature reads @HookItem and its default values at runtime. R8 may otherwise keep the
 # generated object reference while discarding the class annotation, causing the settings Activity
