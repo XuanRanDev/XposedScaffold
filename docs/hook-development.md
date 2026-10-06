@@ -162,7 +162,7 @@ context.hook(method, priority = 100) {
 
 ## 添加标准配置项
 
-设置页目前支持三种声明式配置：
+设置页支持布尔值、文本、整数范围和稳定值单选等声明式配置：
 
 ```kotlin
 override val options = listOf(
@@ -181,6 +181,15 @@ override val options = listOf(
         title = "数量限制",
         default = 10,
         range = 1..100,
+    ),
+    ChoiceOption(
+        key = "mode",
+        title = "运行模式",
+        default = "safe",
+        choices = listOf(
+            Choice("safe", "兼容"),
+            Choice("fast", "快速"),
+        ),
     ),
 )
 ```

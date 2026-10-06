@@ -1,6 +1,5 @@
 package dev.xuanran.xposed.loader.modern
 
-import android.content.SharedPreferences
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import dev.xuanran.xposed.api.HookBridge
@@ -27,8 +26,6 @@ class ModernHookBridge(private val module: XposedModule) : HookBridge {
         if (throwable == null) module.log(priority, tag, message)
         else module.log(priority, tag, message, throwable)
     }
-
-    override fun remotePreferences(name: String): SharedPreferences = module.getRemotePreferences(name)
 }
 
 /** Stable, named framework callback boundary; kept explicitly from R8 in the app rules. */

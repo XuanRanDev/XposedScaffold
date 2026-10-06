@@ -1,9 +1,7 @@
 import java.time.Instant
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
+    id("xposed.android.application")
     alias(libs.plugins.ksp)
 }
 
@@ -23,11 +21,8 @@ val xposedTargetPackagesValue = xposedTargetPackages.joinToString(",")
 
 android {
     namespace = "dev.xuanran.xposedscaffold"
-    compileSdk = 37
-
     defaultConfig {
         applicationId = xposedModulePackage
-        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
@@ -70,10 +65,6 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
     packaging.resources {
         merges += "META-INF/xposed/*"
         excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -105,8 +96,6 @@ android.sourceSets["main"].res.srcDir(generatedXposedScope)
 // an explicit preBuild dependency instead of relying on incidental task ordering.
 tasks.named("preBuild").configure { dependsOn(generateXposedScope) }
 
-kotlin { jvmToolchain(17) }
-
 // Kotlin 2.3 enables Compose group-key deobfuscation mapping by default. It is only diagnostic
 // metadata and requires an additional build-time artifact, so keep release builds reproducible
 // in offline scaffold environments while retaining the normal R8 mapping.txt output.
@@ -130,6 +119,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)

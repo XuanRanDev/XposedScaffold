@@ -13,7 +13,6 @@ import dev.xuanran.xposed.dexkit.DexKitResolver
 import dev.xuanran.xposed.runtime.HookRegistry
 import dev.xuanran.xposed.runtime.HookRuntime
 import dev.xuanran.xposed.runtime.InMemoryErrorStore
-import dev.xuanran.xposed.runtime.SharedPreferencesHookConfig
 
 /**
  * Legacy 与 Modern 入口共用的启动协调器。
@@ -33,6 +32,7 @@ object ModuleStartup {
         processName: String,
         classLoader: ClassLoader,
         bridge: HookBridge,
+        configProvider: HostConfigProvider,
     ) {
         // 某些框架/应用生命周期可能重复派发包回调，入口必须保持幂等。
         if (installed) return
@@ -46,7 +46,7 @@ object ModuleStartup {
                 // 使用 after：此时 baseContext 已写入 Application，系统服务和包信息均可安全访问。
                 bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Application attached; starting hook runtime")
                 try {
-                    start(application, packageName, processName, classLoader, bridge)
+                    start(application, packageName, processName, classLoader, bridge, configProvider)
                 } catch (throwable: Throwable) {
                     bridge.log(android.util.Log.ERROR, ModuleConfig.LOG_TAG, "Hook runtime startup failed", throwable)
                 }
@@ -61,19 +61,19 @@ object ModuleStartup {
         processName: String,
         classLoader: ClassLoader,
         bridge: HookBridge,
+        configProvider: HostConfigProvider,
     ) {
         if (started) return
-        started = true
         // 宿主版本参与 DexKit 缓存键和 Hook 的版本范围判断，不能使用模块自身版本。
         val versionCode = application.packageManager.getPackageInfo(packageName, 0).longVersionCode
         // 注册表位于模块 APK，因此必须用模块 ClassLoader 加载，不能使用宿主 ClassLoader。
         val features = loadGeneratedHooks()
         bridge.log(android.util.Log.INFO, ModuleConfig.LOG_TAG, "Loaded ${features.size} generated hook(s)")
         HookRegistry.register(features)
-        val preferences = bridge.remotePreferences(ModuleConfig.PREFERENCES_NAME)
-            // 后备配置也允许 Legacy 使用者自行向宿主进程注入配置页面；标准生产路径仍是远程偏好。
-            ?: application.getSharedPreferences(ModuleConfig.PREFERENCES_NAME, Context.MODE_PRIVATE)
-        val config = SharedPreferencesHookConfig(preferences)
+        val config = configProvider.open() ?: error(
+            "Framework configuration channel is unavailable; refusing to use host-local preferences",
+        )
+        started = true
         val dex = DexKitResolver(
             // 扫描目标必须是宿主 APK；传入模块 APK 会导致所有匹配都为空。
             apkPath = application.applicationInfo.sourceDir,

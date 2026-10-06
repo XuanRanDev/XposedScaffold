@@ -2,8 +2,12 @@ package dev.xuanran.xposed.loader.legacy
 
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XposedBridge
+import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.callbacks.XC_LoadPackage
 import dev.xuanran.xposed.startup.ModuleStartup
+import dev.xuanran.xposed.startup.HostConfigProvider
+import dev.xuanran.xposed.api.ModuleConfig
+import dev.xuanran.xposed.runtime.SharedPreferencesHookConfig
 
 /** 传统 Xposed API 82 入口；此类应保持极小，禁止放入业务功能。 */
 class LegacyXposedEntry : IXposedHookLoadPackage {
@@ -11,7 +15,18 @@ class LegacyXposedEntry : IXposedHookLoadPackage {
         if (!TargetScope.contains(param.packageName)) return
         val process = param.processName ?: param.packageName
         try {
-            ModuleStartup.install(param.packageName, process, param.classLoader, LegacyHookBridge)
+            ModuleStartup.install(
+                param.packageName,
+                process,
+                param.classLoader,
+                LegacyHookBridge,
+                HostConfigProvider {
+                    XSharedPreferences(ModuleConfig.PACKAGE, ModuleConfig.PREFERENCES_NAME)
+                        .apply { reload() }
+                        .takeIf { it.file.canRead() }
+                        ?.let(::SharedPreferencesHookConfig)
+                },
+            )
         } catch (throwable: Throwable) {
             XposedBridge.log(throwable)
         }

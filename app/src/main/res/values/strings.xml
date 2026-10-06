@@ -1,3 +1,27 @@
 <resources>
     <string name="module_description">A modern, reusable Xposed module scaffold.</string>
+    <string name="nav_home">主页</string>
+    <string name="nav_features">功能</string>
+    <string name="features_title">功能</string>
+    <string name="search">搜索</string>
+    <string name="search_features">搜索功能</string>
+    <string name="no_matching_features">没有匹配的功能</string>
+    <string name="preferences_unavailable">Xposed 配置服务尚未连接，当前无法修改设置。</string>
+    <string name="module_active">模块已激活</string>
+    <string name="module_waiting">等待框架连接</string>
+    <string name="connection_connecting">正在连接 Xposed 服务</string>
+    <string name="connection_legacy">New XSharedPreferences 已启用</string>
+    <string name="connection_modern">Remote Preferences 已连接</string>
+    <string name="connection_disconnected">Xposed 服务连接已断开</string>
+    <string name="connection_unsupported">当前框架不支持模块配置共享</string>
+    <string name="device_information">设备信息</string>
+    <string name="info_module_version">模块版本</string>
+    <string name="info_build_time">构建时间</string>
+    <string name="info_device">设备型号</string>
+    <string name="info_android_version">Android 版本</string>
+    <string name="info_target_apps">目标应用</string>
+    <string name="action_completed">操作已完成</string>
+    <string name="action_failed">操作失败</string>
+    <string name="feature_automatic">自动</string>
+    <string name="feature_run">执行</string>
 </resources>

@@ -3,6 +3,9 @@ package dev.xuanran.xposed.loader.modern
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import dev.xuanran.xposed.startup.ModuleStartup
+import dev.xuanran.xposed.startup.HostConfigProvider
+import dev.xuanran.xposed.api.ModuleConfig
+import dev.xuanran.xposed.runtime.SharedPreferencesHookConfig
 
 /**
  * libxposed API 101–102 入口。
@@ -26,6 +29,14 @@ class ModernXposedEntry : XposedModule() {
         // PackageReady 能拿到最终 ClassLoader，比 PackageLoaded 更适合存在 AppComponentFactory 的宿主。
         // This is the module-level filter; HookRuntime applies the feature-level package filter.
         if (param.packageName !in targetPackages) return
-        ModuleStartup.install(param.packageName, processName, param.classLoader, bridge)
+        ModuleStartup.install(
+            param.packageName,
+            processName,
+            param.classLoader,
+            bridge,
+            HostConfigProvider {
+                SharedPreferencesHookConfig(getRemotePreferences(ModuleConfig.PREFERENCES_NAME))
+            },
+        )
     }
 }

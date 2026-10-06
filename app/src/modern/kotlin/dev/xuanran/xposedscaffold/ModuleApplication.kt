@@ -15,13 +15,14 @@ class ModuleApplication : Application(), XposedServiceHelper.OnServiceListener {
 
     override fun onServiceBind(service: XposedService) {
         // 设置端拿到的是可写实例；注入目标进程中的 XposedModule 拿到同组只读实例。
-        ModulePreferences.preferences = service.getRemotePreferences(ModuleConfig.PREFERENCES_NAME)
-        ModulePreferences.status = "Remote Preferences 已连接"
+        ModuleRepository.connect(
+            service.getRemotePreferences(ModuleConfig.PREFERENCES_NAME),
+            ConnectionState.MODERN_CONNECTED,
+        )
     }
 
     override fun onServiceDied(service: XposedService) {
         // Binder 死亡后立即清空引用，使 Compose 禁用开关，避免写入失效代理。
-        ModulePreferences.preferences = null
-        ModulePreferences.status = "Xposed 服务连接已断开"
+        ModuleRepository.disconnect(ConnectionState.DISCONNECTED)
     }
 }

@@ -50,6 +50,26 @@ data class IntRangeOption(
     val range: IntRange,
 ) : HookOption
 
+data class Choice(
+    val value: String,
+    val label: String,
+)
+
+/** A stable stored value with a user-facing label; labels may be changed without migrating config. */
+data class ChoiceOption(
+    override val key: String,
+    override val title: String,
+    override val description: String = "",
+    val default: String,
+    val choices: List<Choice>,
+) : HookOption {
+    init {
+        require(choices.isNotEmpty()) { "ChoiceOption must contain at least one choice" }
+        require(choices.map(Choice::value).distinct().size == choices.size) { "Choice values must be unique" }
+        require(default in choices.map(Choice::value)) { "ChoiceOption default must match a choice value" }
+    }
+}
+
 /** 功能针对当前宿主环境的可用性结果。 */
 sealed interface Availability {
     data object Available : Availability

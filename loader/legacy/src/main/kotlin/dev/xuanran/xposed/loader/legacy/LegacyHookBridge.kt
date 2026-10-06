@@ -1,13 +1,10 @@
 package dev.xuanran.xposed.loader.legacy
 
-import android.content.SharedPreferences
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XSharedPreferences
 import de.robv.android.xposed.XposedBridge
 import dev.xuanran.xposed.api.HookBridge
 import dev.xuanran.xposed.api.HookCallback
 import dev.xuanran.xposed.api.HookParam
-import dev.xuanran.xposed.api.ModuleConfig
 import dev.xuanran.xposed.api.UnhookHandle
 import java.lang.reflect.Executable
 
@@ -30,10 +27,6 @@ object LegacyHookBridge : HookBridge {
         XposedBridge.log("[$tag] $message")
         throwable?.let(XposedBridge::log)
     }
-
-    override fun remotePreferences(name: String): SharedPreferences? =
-        XSharedPreferences(ModuleConfig.PACKAGE, name).apply { reload() }
-            .takeIf { it.file.canRead() }
 }
 
 /** XC_MethodHook.MethodHookParam 的零拷贝视图。 */

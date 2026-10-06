@@ -1,7 +1,6 @@
 package dev.xuanran.xposed.api
 
 import java.lang.reflect.Executable
-import android.content.SharedPreferences
 
 /**
  * Xposed 框架能力的最小抽象层。
@@ -21,11 +20,6 @@ interface HookBridge {
     fun hook(executable: Executable, priority: Int = 50, callback: HookCallback): UnhookHandle
     /** 写入框架日志，业务层不应直接调用某一代框架的日志 API。 */
     fun log(priority: Int, tag: String, message: String, throwable: Throwable? = null)
-    /**
-     * 获取模块侧可写、宿主侧可读的远程配置。
-     * 旧框架可能无法可靠实现，所以允许返回 null 并由 startup 选择后备方案。
-     */
-    fun remotePreferences(name: String): SharedPreferences? = null
 }
 
 /** 可幂等取消一个已经安装的 Hook。 */

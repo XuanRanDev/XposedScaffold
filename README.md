@@ -10,7 +10,17 @@
 
 ### 1. 配置模块身份
 
-编辑根目录的 `gradle.properties`：
+推荐使用初始化脚本一次写入并校验模块身份：
+
+```powershell
+.\scripts\init-template.ps1 `
+  -ProjectName ExampleModule `
+  -ModuleName "Example Module" `
+  -ModulePackage dev.example.module `
+  -TargetPackages com.example.target
+```
+
+也可以手动编辑根目录的 `gradle.properties`：
 
 ```properties
 xposedTargetPackages=com.example.target
@@ -31,6 +41,7 @@ xposedPreferencesName=example_module
 | `xposedPreferencesName` | 模块与宿主共享的配置文件名 |
 
 源码 namespace 和 Kotlin 包路径属于脚手架内部结构，创建新模块时通常不需要整体重命名。
+初始化完成后按需替换 `app/src/main/res` 中的启动图标；脚本不会覆盖任何图片资源。
 
 ### 2. 编写第一个 Hook
 
@@ -77,7 +88,7 @@ object ActivityLogHook : SwitchHook() {
 
 ### 3. 构建 APK
 
-项目需要 JDK 17 和 Android SDK。Windows PowerShell 命令：
+项目需要 JDK 21 和 Android SDK，产物仍以 Java 17 字节码为目标。Windows PowerShell 命令：
 
 ```powershell
 # 传统 Xposed / LSPosed API 82
@@ -140,6 +151,8 @@ loader/startup      两套 Loader 共用的 Application.attach 启动流程
 loader/legacy       Xposed API 82 适配器
 loader/modern       libxposed API 101–102 适配器
 processor           @HookItem KSP 注册表生成器
+build-logic         Android/Kotlin 模块的统一构建约定
+scripts             模板初始化工具
 docs                开发指南
 ```
 

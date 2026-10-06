@@ -1,8 +1,6 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("xposed.kotlin.jvm")
 }
-
-kotlin { jvmToolchain(17) }
 
 dependencies {
     implementation(libs.ksp.api)
